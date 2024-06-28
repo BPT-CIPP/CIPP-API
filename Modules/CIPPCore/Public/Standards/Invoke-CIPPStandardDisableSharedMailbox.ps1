@@ -4,7 +4,20 @@ function Invoke-CIPPStandardDisableSharedMailbox {
     Internal
     #>
     param($Tenant, $Settings)
-    $UserList = New-GraphGetRequest -uri 'https://graph.microsoft.com/v1.0/users?$top=999&$filter=accountEnabled eq true' -Tenantid $tenant -scope 'https://graph.microsoft.com/.default' 
+
+    # Get all users with their account enabled
+    $UserList_raw = New-GraphGetRequest -uri "https://graph.microsoft.com/v1.0/users?$top=999&$filter=accountEnabled eq true" -Tenantid $tenant -scope 'https://graph.microsoft.com/.default'
+    
+    # Filter users who do not have any assigned licenses
+    $UserList = @()
+    foreach ($User in $UserList_raw.value) {
+        $LicenseDetails = New-GraphGetRequest -uri "https://graph.microsoft.com/v1.0/users/$($User.id)/licenseDetails" -Tenantid $tenant -scope 'https://graph.microsoft.com/.default'
+        if ($LicenseDetails.value.Count -eq 0) {
+            $UserList += $User
+        }
+    }
+
+    # Original script continues unchanged
     $SharedMailboxList = (New-GraphGetRequest -uri "https://outlook.office365.com/adminapi/beta/$($Tenant)/Mailbox" -Tenantid $tenant -scope ExchangeOnline | Where-Object { $_.RecipientTypeDetails -EQ 'SharedMailbox' -or $_.RecipientTypeDetails -eq 'SchedulingMailbox' -and $_.UserPrincipalName -in $UserList.UserPrincipalName })
 
     If ($Settings.remediate -eq $true) {
