@@ -22,7 +22,7 @@ function Invoke-ExecSetLicenseRequestProcess {
     $Body = @{ policyValue = $PolicyValue } | ConvertTo-Json -Depth 5 -Compress
 
     try {
-        $Result = New-GraphPostRequest -uri 'https://admin.microsoft.com/admin/api/licenses/customRequestProcess' -scope 'https://admin.microsoft.com/.default' -tenantid $TenantFilter -type POST -body $Body
+        $Result = New-GraphPostRequest -uri 'https://licensing.m365.microsoft.com/v1.0/policies/request-workflow/custom-request-process' -scope 'aeb86249-8ea3-49e2-900b-54cc8e308f85/.default' -tenantid $TenantFilter -type POST -body $Body
         $Message = "Successfully configured license request process for $TenantFilter"
         Write-LogMessage -headers $Headers -API $APIName -tenant $TenantFilter -message $Message -Sev 'Info'
         $StatusCode = [HttpStatusCode]::OK
